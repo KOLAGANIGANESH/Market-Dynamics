@@ -1,0 +1,71 @@
+{% extends 'layout.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<body>
+    <h2>Predicted Demand</h2>
+    <form id="dateForm">
+        <label for="Product_code">Product_code:</label>
+        <input type="text" id="Product_code" name="Product_code" required>
+        <br><br>
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" required>
+        <br><br>
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" required>
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="result"></div>
+      <canvas id="can2" style="display: none;"></canvas>
+    <button onclick="runanalasys()" id="Run_analasys" >Run Analysis</button>
+
+    <script>
+        document.getElementById('dateForm').addEventListener('submit', async function(event) {
+         var element = document.getElementById("can2");
+          element.style.display = "none";
+            event.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('http://127.0.0.1:5000/predict_demand', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            document.getElementById('result').innerText = `Average Demand: ${data.average_demand}`;
+              fetch('http://127.0.0.1:5000/get_image', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(blob);
+    img.onload = function() {
+      URL.revokeObjectURL(this.src);
+      var canvas = document.getElementById("can2");
+      var ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+    };
+  })
+
+      });
+        function runanalasys() {
+    var element = document.getElementById("can2");
+
+    if (element.style.display !== "block") {
+        element.style.display = "block";
+    }
+    var element = document.getElementById("Run_analasys");
+      element.style.display = "none";
+}
+
+    </script>
+</body>
+{% endblock %}
